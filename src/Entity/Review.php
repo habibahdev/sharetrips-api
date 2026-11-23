@@ -21,8 +21,8 @@ class Review
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\OneToOne(inversedBy: 'review')]
+    #[ORM\JoinColumn(unique: true, nullable: false)]
     private ?Booking $booking = null;
 
     #[ORM\ManyToOne]

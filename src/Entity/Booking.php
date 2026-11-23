@@ -53,7 +53,7 @@ class Booking
     #[ORM\OneToMany(targetEntity: Payment::class, mappedBy: 'booking')]
     private Collection $payments;
 
-    #[ORM\OneToOne(mappedBy: 'booking', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(targetEntity: Review::class, mappedBy: 'booking', cascade: ['persist', 'remove'])]
     private ?Review $review = null;
 
     public function __construct()
