@@ -2,16 +2,38 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Enum\Types\VehicleType;
 use App\Entity\Traits\TimeTrait;
 use App\Repository\VehicleRepository;
+use App\State\VehicleProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: VehicleRepository::class)]
 #[ORM\HasLifecycleCallbacks()]
+#[UniqueEntity(fields: ['licensePlate'], message: 'Cette plaque est déjà enregistrée.')]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Post(
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            processor: VehicleProcessor::class
+        ),
+        new Get(security: "is_granted('ROLE_ADMIN') or object.getOwner() == user"),
+        new Patch(security: "is_granted('ROLE_ADMIN') or object.getOwner() == user"),
+    ],
+    normalizationContext: ['groups' => ['vehicle:read']],
+    denormalizationContext: ['groups' => ['vehicle:write']],
+)]
 class Vehicle
 {
     use TimeTrait;
@@ -19,35 +41,44 @@ class Vehicle
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['vehicle:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'vehicles')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['vehicle:read'])]
     private ?User $owner = null;
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?string $brand = null;
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?string $model = null;
 
     #[ORM\Column(length: 20, unique: true)]
     #[Assert\NotBlank]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?string $licensePlate = null;
 
     #[ORM\Column(length: 20, nullable: true)]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?string $color = null;
 
     #[ORM\Column(enumType: VehicleType::class)]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?VehicleType $type = null;
 
     #[ORM\Column]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?bool $isActive = null;
 
     #[ORM\Column]
     #[Assert\Range(min: 1, max: 8)]
+    #[Groups(['vehicle:read', 'vehicle:write'])]
     private ?int $seats = null;
 
     /**
