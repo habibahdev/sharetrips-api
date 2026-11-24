@@ -10,6 +10,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TripRepository::class)]
@@ -22,18 +23,23 @@ class Trip
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['trip:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'trips')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['trip:read'])]
     private ?User $driver = null;
 
     #[ORM\ManyToOne(inversedBy: 'trips')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(groups: ['trip:create'])]
+    #[Groups(['trip:read', 'trip:create'])]
     private ?Vehicle $vehicle = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
+    #[Groups(['trip:read', 'trip:write'])]
     private ?string $departure = null;
 
     #[ORM\Column(length: 255)]
@@ -41,21 +47,30 @@ class Trip
     private ?string $destination = null;
 
     #[ORM\Column]
-    #[Assert\GreaterThan('now')]
+    #[Assert\NotNull]
+    #[Assert\GreaterThan('now', groups: ['trip:create'])]
+    #[Groups(['trip:read', 'trip:write'])]
     private ?\DateTimeImmutable $departureAt = null;
 
     #[ORM\Column(nullable: true)]
+    #[Assert\GreaterThan(propertyPath: 'departureAt', message: "L'arrivée doit être postérieure au départ.")]
+    #[Groups(['trip:read', 'trip:write'])]
     private ?\DateTimeImmutable $estimatedArrivalAt = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     #[Assert\PositiveOrZero]
+    #[Assert\NotNull]
+    #[Groups(['trip:read', 'trip:write'])]
     private ?string $pricePerSeat = null;
 
     #[ORM\Column]
     #[Assert\Positive]
+    #[Assert\NotNull]
+    #[Groups(['trip:read', 'trip:write'])]
     private ?int $seatsOffered = null;
 
     #[ORM\Column(enumType: TripStatus::class)]
+    #[Groups(['trip:read', 'trip:write'])]
     private ?TripStatus $status = null;
 
     /**
@@ -63,6 +78,8 @@ class Trip
      */
     #[ORM\OneToMany(targetEntity: TripStop::class, mappedBy: 'trip', cascade: ['persist', 'remove'], orphanRemoval: true)]
     #[ORM\OrderBy(['position' => 'ASC'])]
+    #[Assert\Valid]
+    #[Groups(['trip:read', 'trip:write'])]
     private Collection $stops;
 
     /**
@@ -195,7 +212,7 @@ class Trip
      * Place encore disponibles
      * @return int
      */
-    public function getSeatsAvailable(): int
+    public function getSeatsBooked(): int
     {
         $taken = 0;
         foreach ($this->bookings as $booking) {
@@ -203,7 +220,13 @@ class Trip
                 $taken += (int) $booking->getSeatsBooked();
             }
         }
-        return max(0, (int) $this->seatsOffered - $taken);
+        return $taken;
+    }
+
+    #[Groups(['trip:read'])]
+    public function getSeatsAvailable(): int
+    {
+        return max(0, (int) $this->seatsOffered - $this->getSeatsBooked());
     }
 
     /**
