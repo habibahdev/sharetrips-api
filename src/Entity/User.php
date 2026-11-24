@@ -11,7 +11,7 @@ use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
 use App\Entity\Enum\Status\UserStatus;
 use App\Repository\UserRepository;
-use App\State\UserPasswordHasher;
+use App\State\UserProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -29,12 +29,12 @@ use Symfony\Component\Validator\Constraints as Assert;
         new GetCollection(security: "is_granted('ROLE_ADMIN')"),
         new Post(
             validationContext: ['groups' => ['Default', 'user:create']],
-            processor: UserPasswordHasher::class
+            processor: UserProcessor::class
         ),
         new Get(security: "is_granted('ROLE_ADMIN') or object == user"),
         new Patch(
             security: "is_granted('ROLE_ADMIN') or object == user",
-            processor: UserPasswordHasher::class,
+            processor: UserProcessor::class,
         ),
         new Delete(security: "is_granted('ROLE_ADMIN')"),
     ],
