@@ -41,7 +41,7 @@ class Vehicle
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['vehicle:read'])]
+    #[Groups(['vehicle:read', 'vehicle:public'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'vehicles')]
@@ -51,12 +51,12 @@ class Vehicle
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank]
-    #[Groups(['vehicle:read', 'vehicle:write'])]
+    #[Groups(['vehicle:read', 'vehicle:write', 'vehicle:public'])]
     private ?string $brand = null;
 
     #[ORM\Column(length: 50)]
     #[Assert\NotBlank]
-    #[Groups(['vehicle:read', 'vehicle:write'])]
+    #[Groups(['vehicle:read', 'vehicle:write', 'vehicle:public'])]
     private ?string $model = null;
 
     #[ORM\Column(length: 20, unique: true)]
@@ -65,11 +65,11 @@ class Vehicle
     private ?string $licensePlate = null;
 
     #[ORM\Column(length: 20, nullable: true)]
-    #[Groups(['vehicle:read', 'vehicle:write'])]
+    #[Groups(['vehicle:read', 'vehicle:write', 'vehicle:public'])]
     private ?string $color = null;
 
     #[ORM\Column(enumType: VehicleType::class)]
-    #[Groups(['vehicle:read', 'vehicle:write'])]
+    #[Groups(['vehicle:read', 'vehicle:write', 'vehicle:public'])]
     private ?VehicleType $type = null;
 
     #[ORM\Column]
@@ -78,7 +78,7 @@ class Vehicle
 
     #[ORM\Column]
     #[Assert\Range(min: 1, max: 8)]
-    #[Groups(['vehicle:read', 'vehicle:write'])]
+    #[Groups(['vehicle:read', 'vehicle:write', 'vehicle:public'])]
     private ?int $seats = null;
 
     /**
