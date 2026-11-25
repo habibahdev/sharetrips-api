@@ -7,6 +7,7 @@ use ApiPlatform\State\ProcessorInterface;
 use App\Entity\Enum\Status\TripStatus;
 use App\Entity\Trip;
 use App\Entity\User;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
