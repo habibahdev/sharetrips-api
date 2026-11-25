@@ -2,11 +2,17 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\ComparisonFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\ExactFilter;
+use ApiPlatform\Doctrine\Orm\Filter\PartialSearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SortFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\QueryParameter;
 use App\Entity\Enum\Status\BookingStatus;
 use App\Entity\Enum\Status\TripStatus;
 use App\Entity\Traits\TimeTrait;
@@ -24,7 +30,45 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Index(columns: ['departure', 'destination', 'departure_at'])]
 #[ApiResource(
     operations: [
-        new GetCollection(),
+        new GetCollection(
+            parameters: [
+                'departure' => new QueryParameter(
+                    filter: new PartialSearchFilter(),
+                    property: 'departure',
+                    description: 'Recherche partielle par adresse de départ.'
+                ),
+                'destination' => new QueryParameter(
+                    filter: new PartialSearchFilter(),
+                    property: 'destination',
+                    description: 'Recherche partielle par destination.'
+                ),
+                'status' => new QueryParameter(
+                    filter: new ExactFilter(),
+                    property: 'status',
+                    description: 'Filtrage par statut du trajet.'
+                ),
+                'departureAt' => new QueryParameter(
+                    filter: DateFilter::class,
+                    property: 'departureAt',
+                    description: 'Filtrage par date de départ.'
+                ),
+                'pricePerSeat' => new QueryParameter(
+                    filter: new ComparisonFilter(new ExactFilter()),
+                    property: 'seatsOffered',
+                    description: 'Filtrage par nombre de places proposées.'
+                ),
+                'orderDepartureAt' => new QueryParameter(
+                    filter: new SortFilter(),
+                    property: 'departureAt',
+                    description: 'Filtrage par date de départ.'
+                ),
+                'orderPricePerSeat' => new QueryParameter(
+                    filter: new SortFilter(),
+                    property: 'pricePerSeat',
+                    description: 'Filtrage par prix par place.'
+                )
+            ]
+        ),
         new Get(),
         new Post(
             denormalizationContext: ['groups' => ['trip:write', 'trip:create']],
@@ -68,6 +112,7 @@ class Trip
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
+    #[Groups(['trip:read', 'trip:write'])]
     private ?string $destination = null;
 
     #[ORM\Column]
@@ -94,7 +139,7 @@ class Trip
     private ?int $seatsOffered = null;
 
     #[ORM\Column(enumType: TripStatus::class)]
-    #[Groups(['trip:read', 'trip:write'])]
+    #[Groups(['trip:read'])]
     private ?TripStatus $status = null;
 
     /**
