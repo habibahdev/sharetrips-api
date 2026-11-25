@@ -119,7 +119,7 @@ class Notification
     public function setIsRead(bool $isRead): static
     {
         if ($isRead && !$this->isRead) {
-            $this->markRead();
+            $this->markAsRead();
         }
 
         return $this;
