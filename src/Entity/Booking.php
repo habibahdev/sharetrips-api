@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: BookingRepository::class)]
@@ -21,30 +22,39 @@ class Booking
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['booking:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'bookings')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['booking:read'])]
     private ?User $passenger = null;
 
     #[ORM\ManyToOne(inversedBy: 'bookings')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull]
+    #[Groups(['booking:read', 'booking:create'])]
     private ?Trip $trip = null;
 
     #[ORM\Column]
     #[Assert\Positive]
+    #[Assert\NotNull]
+    #[Groups(['booking:read', 'booking:create'])]
     private ?int $seatsBooked = null;
 
     /**
      * Prix figé au moment de la réservation.
      */
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[Groups(['booking:read'])]
     private ?string $pricePerSear = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[Groups(['booking:read'])]
     private ?string $totalPrice = null;
 
     #[ORM\Column(enumType: BookingStatus::class)]
+    #[Groups(['booking:read', 'booking:update'])]
     private ?BookingStatus $status = null;
 
     /**
