@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\TripStopRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TripStopRepository::class)]
@@ -21,13 +22,16 @@ class TripStop
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
+    #[Groups(['trip:read', 'trip:create'])]
     private ?string $address = null;
 
     #[ORM\Column]
     #[Assert\PositiveOrZero]
+    #[Groups(['trip:read', 'trip:create'])]
     private ?int $position = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['trip:read', 'trip:create'])]
     private ?\DateTimeImmutable $estimatedArrivalAt = null;
 
     #[ORM\Column]
