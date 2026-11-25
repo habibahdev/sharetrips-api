@@ -6,6 +6,7 @@ use App\Entity\Enum\Types\NotificationType;
 use App\Repository\NotificationRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: NotificationRepository::class)]
 #[ORM\Index(columns: ['recipient_id', 'is_read'])]
@@ -14,6 +15,7 @@ class Notification
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['notification:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'notifications')]
@@ -24,24 +26,31 @@ class Notification
     private ?NotificationType $type = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['notification:read'])]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['notification:read'])]
     private ?string $message = null;
 
     #[ORM\Column]
+    #[Groups(['notification:read', 'notification:update'])]
     private ?bool $isRead = false;
 
     #[ORM\Column(length: 50, nullable: true)]
+    #[Groups(['notification:read'])]
     private ?string $relatedEntityType = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['notification:read'])]
     private ?int $relatedEntityId = null;
 
     #[ORM\Column]
+    #[Groups(['notification:read'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(['notification:read'])]
     private ?\DateTimeImmutable $readAt = null;
 
     public function __construct()
@@ -109,7 +118,9 @@ class Notification
 
     public function setIsRead(bool $isRead): static
     {
-        $this->isRead = $isRead;
+        if ($isRead && !$this->isRead) {
+            $this->markRead();
+        }
 
         return $this;
     }
