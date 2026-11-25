@@ -9,7 +9,7 @@
 /vendor/
 .env
 .env.dev.local
-/.idea
+.idea
 AGENTS.md
 ###< symfony/framework-bundle ###
 
