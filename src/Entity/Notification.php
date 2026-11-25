@@ -2,6 +2,14 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\ExactFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\QueryParameter;
 use App\Entity\Enum\Types\NotificationType;
 use App\Repository\NotificationRepository;
 use Doctrine\DBAL\Types\Types;
@@ -10,6 +18,33 @@ use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: NotificationRepository::class)]
 #[ORM\Index(columns: ['recipient_id', 'is_read'])]
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            security: "is_granted('ROLE_USER')",
+            parameters: [
+                'isRead' => new QueryParameter(
+                    filter: new BooleanFilter(),
+                    property: 'isRead',
+                    description: 'Filtrer les notifications selon leur état de lecture.'
+                ),
+                'type' => new QueryParameter(
+                    filter: new ExactFilter(),
+                    property: 'type',
+                    description: 'Filtrer les notifications selon leur type.'
+                ),
+            ]
+        ),
+        new Get(security: 'object.getRecipient() == user'),
+        new Patch(
+            denormalizationContext: ['groups' => ['notification:update']],
+            security: 'object.getRecipient() == user'
+        ),
+        new Delete(security: 'object.getRecipient() == user'),
+    ],
+    normalizationContext: ['groups' => ['notification:read']],
+    order: ['createdAt' => 'DESC'],
+)]
 class Notification
 {
     #[ORM\Id]
