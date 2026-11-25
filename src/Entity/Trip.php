@@ -2,10 +2,16 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
 use App\Entity\Enum\Status\BookingStatus;
 use App\Entity\Enum\Status\TripStatus;
 use App\Entity\Traits\TimeTrait;
 use App\Repository\TripRepository;
+use App\State\TripProcessor;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -16,6 +22,24 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: TripRepository::class)]
 #[ORM\HasLifecycleCallbacks]
 #[ORM\Index(columns: ['departure', 'destination', 'departure_at'])]
+#[ApiResource(
+    operations: [
+        new GetCollection(),
+        new Get(),
+        new Post(
+            denormalizationContext: ['groups' => ['trip:write', 'trip:create']],
+            validationContext: ['groups' => ['Default', 'trip:create']],
+            processor: TripProcessor::class
+        ),
+        new Patch(
+            denormalizationContext: ['groups' => ['trip:write']],
+            security: "is_granted('ROLE_ADMIN') or object.getDriver() == user",
+            processor: TripProcessor::class
+        ),
+    ],
+    normalizationContext: ['groups' => ['trip:read', 'user:public', 'vehicle:public']],
+    order: ['departureAt' => 'ASC'],
+)]
 class Trip
 {
     use TimeTrait;
