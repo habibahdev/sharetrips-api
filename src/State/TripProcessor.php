@@ -4,6 +4,7 @@ namespace App\State;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\State\ProcessorInterface;
+use App\Entity\Enum\Status\BookingStatus;
 use App\Entity\Enum\Status\TripStatus;
 use App\Entity\Trip;
 use App\Entity\User;
@@ -103,7 +104,7 @@ final readonly class TripProcessor implements ProcessorInterface
             'departure' => $trip->getDeparture(),
             'destination' => $trip->getDestination(),
             'departureAt' => $trip->getDepartureAt(),
-            'estimatedArrival' => $trip->getEstimatedArrival(),
+            'estimatedArrival' => $trip->getEstimatedArrivalAt(),
             'pricePerSeat' => $trip->getPricePerSeat()
         ];
 
