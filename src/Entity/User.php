@@ -99,6 +99,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ApiProperty(security: "is_granted('ROLE_ADMIN') or object == user")]
     private ?UserStatus $status = null;
 
+    #[ORM\Column(type: Types::DECIMAL, precision: 3, scale: 2, nullable: true)]
+    #[Groups(['user:read', 'user:public'])]
+    private ?string $ratingAverage = null;
+
+    #[ORM\Column(options: ['default' => 0])]
+    #[Groups(['user:read', 'user:public'])]
+    private int $ratingCount = 0;
+
     /**
      * @var Collection<int, Vehicle>
      */
@@ -262,6 +270,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setStatus(UserStatus $status): static
     {
         $this->status = $status;
+
+        return $this;
+    }
+
+    public function getRatingAverage(): ?string
+    {
+        return $this->ratingAverage;
+    }
+
+    public function setRatingAverage(?string $ratingAverage): static
+    {
+        $this->ratingAverage = $ratingAverage;
+
+        return $this;
+    }
+
+    public function getRatingCount(): int
+    {
+        return $this->ratingCount;
+    }
+
+    public function setRatingCount(int $ratingCount): static
+    {
+        $this->ratingCount = $ratingCount;
 
         return $this;
     }
