@@ -5,6 +5,7 @@ use App\Entity\Booking;
 use App\Entity\Enum\Status\BookingStatus;
 use App\Entity\Enum\Types\NotificationType;
 use App\Entity\Notification;
+use App\Entity\Review;
 use App\Entity\Trip;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -42,6 +43,11 @@ final readonly class NotificationService
             }
             $this->notify($booking->getPassenger(), NotificationType::TRIP_UPDATED, 'Trajet modifié', sprintf('Le conducteur a modifié le trajet %s : consultez les nouveaux détails.', $this->route($trip)), 'trip', $trip->getId());
         }
+    }
+
+    public function reviewCreated(Review $review): void
+    {
+        $this->notify($review->getReviewedUser(), NotificationType::NEW_REVIEW, 'Nouvel avis', sprintf('%s vous a attribué %d/5.', $review->getAuthor()->getFirstName(), $review->getRating()), 'review', $review->getId());
     }
 
     private function notify(User $recipient, NotificationType $type, string $title, string $message, ?string $relatedEntityType = null, ?int $relatedId = null): void
