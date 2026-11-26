@@ -6,6 +6,7 @@ use App\Entity\Traits\TimeTrait;
 use App\Repository\ReviewRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ReviewRepository::class)]
@@ -19,25 +20,34 @@ class Review
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['review:read'])]
     private ?int $id = null;
 
     #[ORM\OneToOne(inversedBy: 'review')]
     #[ORM\JoinColumn(unique: true, nullable: false)]
+    #[Assert\NotNull]
+    #[Groups(['review:read', 'review:create'])]
     private ?Booking $booking = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['review:read'])]
     private ?User $author = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['review:read'])]
     private ?User $reviewedUser = null;
 
     #[ORM\Column]
     #[Assert\Range(min: 1, max: 5)]
+    #[Assert\NotNull]
+    #[Groups(['review:read', 'review:write'])]
     private ?int $rating = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 1000)]
+    #[Groups(['review:read', 'review:write'])]
     private ?string $comment = null;
 
     public function getId(): ?int
