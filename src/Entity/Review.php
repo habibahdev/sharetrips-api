@@ -2,8 +2,17 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Orm\Filter\ExactFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Link;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\QueryParameter;
 use App\Entity\Traits\TimeTrait;
 use App\Repository\ReviewRepository;
+use App\State\ReviewProcessor;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
@@ -13,6 +22,53 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\HasLifecycleCallbacks]
 #[ORM\UniqueConstraint(columns: ['booking_id', 'author_id'])]
 #[ORM\Index(columns: ['reviewed_user_id'])]
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            parameters: [
+                'author' => new QueryParameter(
+                    filter: new ExactFilter(),
+                    property: 'author',
+                    description: 'Filtrage les avis selon leur auteur.'
+                ),
+                'booking' => new QueryParameter(
+                    filter: new ExactFilter(),
+                    property: 'booking',
+                    description: 'Filtrage les avis selon leur réservation.'
+                ),
+                'rating' => new QueryParameter(
+                    filter: new ExactFilter(),
+                    property: 'rating',
+                    description: 'Filtrage les avis selon leur note.'
+                ),
+            ]
+        ),
+        new GetCollection(
+            uriTemplate: '/users/{userId}/reviews',
+            uriVariables: ['userId' => new Link(toProperty: 'reviewedUser', fromClass: User::class)],
+            parameters: [
+                'rating' => new QueryParameter(
+                    filter: new ExactFilter(),
+                    property: 'rating',
+                    description: 'Filtrage les avis reçus selon leur note.'
+                )
+            ]
+        ),
+        new Get(),
+        new Post(
+            denormalizationContext: ['groups' => ['review:write', 'review:create']],
+            security: "is_granted('ROLE_USER')",
+            processor: ReviewProcessor::class
+        ),
+        new Patch(
+            denormalizationContext: ['groups' => ['review:write']],
+            security: "is_granted('ROLE_ADMIN') or object.getAuthor() == user",
+            processor: ReviewProcessor::class
+        ),
+    ],
+    normalizationContext: ['groups' => ['review:read', 'user:public', 'timestamp:read']],
+    order: ['createdAt' => 'DESC'],
+)]
 class Review
 {
     use TimeTrait;
