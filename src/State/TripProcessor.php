@@ -25,6 +25,7 @@ final readonly class TripProcessor implements ProcessorInterface
         private ProcessorInterface $processor,
         private Security $security,
         private EntityManagerInterface $entityManager,
+        private NotificationService $notifications
     ) {}
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): Trip
@@ -79,7 +80,39 @@ final readonly class TripProcessor implements ProcessorInterface
         if ($trip->getSeatsOffered() < $trip->getSeatsBooked()) {
             throw new UnprocessableEntityHttpException('Des places sont déjà réservées : vous ne pouvez pas en proposer moins.');
         }
+        $cancelledPassengers = [];
+        if (TripStatus::CANCELLED === $after && $before !== $after) {
+            foreach ($trip->getBookings() as $booking) {
+                if (BookingStatus::CONFIRMED === $booking->getStatus()) {
+                    $booking->setStatus(BookingStatus::CANCELLED);
+                    $cancelledPassengers[] = $booking->getPassenger();
+                }
+            }
+        }
         $this->assertSeatsFitVehicle($trip);
+        if (TripStatus::CANCELLED === $after) {
+            $this->notifications->tripCancelled($trip, $cancelledPassengers);
+        } elseif ($this->hasTrackedChanges($trip, $original)) {
+            $this->notifications->tripUpdated($trip);
+        }
+    }
+
+    private function hasTrackedChanges(Trip $trip, array $original): bool
+    {
+        $current = [
+            'departure' => $trip->getDeparture(),
+            'destination' => $trip->getDestination(),
+            'departureAt' => $trip->getDepartureAt(),
+            'estimatedArrival' => $trip->getEstimatedArrival(),
+            'pricePerSeat' => $trip->getPricePerSeat()
+        ];
+
+        foreach ($current as $field => $value) {
+            if (($original[$field] ?? null) !== $value) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function assertSeatsFitVehicle(Trip $trip): void

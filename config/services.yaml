@@ -33,3 +33,7 @@ services:
     App\State\TripProcessor:
         bind:
             $processor: '@api_platform.doctrine.orm.state.persist_processor'
+
+    App\State\BookingProcessor:
+        bind:
+            $processor: '@api_platform.doctrine.orm.state.persist_processor'
